@@ -135,11 +135,11 @@ public class videoCamera extends JPanel {
 			}
 			
 			if ( loading ) {
-				rotate += 5;
+				rotate += 15;
 				rotate = rotate % 360;
 			} else {
 				if (rotate > 0 && rotate < 360)
-					rotate += 5;
+					rotate += 15;
 				else
 					rotate = 0;
 				
@@ -445,12 +445,43 @@ public class videoCamera extends JPanel {
 			g2.setColor(blend(f.color,Color.WHITE,f.li));
 			g2.setStroke(new BasicStroke(4 + (int)(f.li*4)));
 
-			drawDiamond(
+			/*drawDiamond(
 					g2,
 					(int) (f._drawBoundsX + f._drawBoundsW / 2),
 					(int) (f._drawBoundsY + f._drawBoundsH / 2 - f._drawBoundsH * 0.75),
 					(int) (f._drawBoundsX + f._drawBoundsW * 2),
-					(int) (f._drawBoundsY + f._drawBoundsH * 2 - f._drawBoundsH * 0.75));
+					(int) (f._drawBoundsY + f._drawBoundsH * 2 - f._drawBoundsH * 0.75));*/
+			
+			double cx = f._drawBoundsX + f._drawBoundsW / 2;
+			double cy = f._drawBoundsY + f._drawBoundsH / 2;
+			double ro = f._drawBoundsW * 0.75;
+			
+			for (int i = 0; i < 4 ; i++){
+				double rot = Math.toRadians(f.rotate + i * 90);
+				double rot2 = Math.toRadians(f.rotate + i * 90 + 45);
+				double rot3 = Math.toRadians(f.rotate + i * 90 - 45);
+				int dd = - (int) (ro * 0.3 + 0.3 * f.li);
+				g2.drawLine((int)(cx + ro * Math.cos(rot)), 
+						(int)(cy + ro * Math.sin(rot) ), 
+						(int)(cx + ro * Math.cos(rot) + dd * Math.cos(rot2)), 
+						(int)(cy + ro * Math.sin(rot) + dd * Math.sin(rot2)));
+				
+				g2.drawLine((int)(cx + ro * Math.cos(rot)), 
+						(int)(cy + ro * Math.sin(rot) ), 
+						(int)(cx + ro * Math.cos(rot) + dd * Math.cos(rot3)), 
+						(int)(cy + ro * Math.sin(rot) + dd * Math.sin(rot3)));
+				
+				rot = Math.toRadians(i * 90);
+				rot2 = Math.toRadians(i * 90 + 45 + 90);
+				rot3 = Math.toRadians(i * 90 - 45);
+				double rot4 = Math.toRadians(i * 90 + 90);
+				
+				g2.drawLine((int)(cx + ro * Math.cos(rot) + dd * Math.cos(rot3)), 
+						(int)(cy + ro * Math.sin(rot) + dd * Math.sin(rot3)),
+						(int)(cx + ro * Math.cos(rot4) + dd * Math.cos(rot2)), 
+						(int)(cy + ro * Math.sin(rot4) + dd * Math.sin(rot2)));
+			}
+			
 
 			g2.setColor(Color.WHITE);
 
@@ -492,7 +523,7 @@ public class videoCamera extends JPanel {
 		}
 
 	}
-
+	
 	public byte[] extractBytes(String ImageName) throws IOException {
 		// open image
 		File imgPath = new File(ImageName);
@@ -507,6 +538,7 @@ public class videoCamera extends JPanel {
 
 	public void saveImage(Mat subimg, Face f) {
 		idx++;
+		f.loading = true;
 
 		Imgcodecs.imwrite("filename" + idx + ".jpg", subimg);
 
@@ -594,6 +626,7 @@ public class videoCamera extends JPanel {
 															try {
 																f.name = body.getObject().getString("name").toUpperCase();
 																f.occ = body.getObject().getString("userData"); 
+																f.loading = false;
 															} catch (JSONException e) {
 																// TODO Auto-generated catch block
 																e.printStackTrace();
