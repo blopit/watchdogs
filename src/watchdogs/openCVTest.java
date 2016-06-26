@@ -13,6 +13,8 @@ public class openCVTest {
 	}
 
 	public static void main(String[] args) throws IOException {
+		
+		System.out.println(System.getProperty("java.library.path"));
 
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		VideoCapture camera = new VideoCapture(0);
