@@ -126,13 +126,13 @@ public class videoCamera extends JPanel {
 			if (name == null) {
 				drawName = randofy(drawName, 6);
 			} else {
-				drawName = randoSet(drawName, name, 12);
+				drawName = randoSet(drawName, name, 12, 3);
 			}
 
 			if (occ == null) {
 				drawOcc = randofy(drawOcc, 6);
 			} else {
-				drawOcc = randoSet(drawOcc, occ, 12);
+				drawOcc = randoSet(drawOcc, occ, 12, 3);
 			}
 
 		}
@@ -152,7 +152,7 @@ public class videoCamera extends JPanel {
 		return s;
 	}
 
-	public String randoSet(String str, String act, int entropy) {
+	public String randoSet(String str, String act, int entropy, int speed) {
 
 		String s = str;
 		if (s.length() != act.length()) {
@@ -177,7 +177,7 @@ public class videoCamera extends JPanel {
 		} else {
 			//Random random = new Random();
 			//int index = random.nextInt(s.length());
-			for (int i = 0; i < entropy; i++) {
+			for (int i = 0; i < speed; i++) {
 				int index = 0;
 				for(;index < Math.max(act.length(),s.length()) - 1; index++) {
 					if (s.charAt(index) != act.charAt(index))
