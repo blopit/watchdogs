@@ -474,7 +474,7 @@ public class videoCamera extends JPanel {
 
 		try {
 			
-			final InputStream stream = new FileInputStream(new File("filename" + idx + ".jpg"));
+			final InputStream stream = new FileInputStream(new File("filename" + idx + ".png"));
 			final byte[] bytes = new byte[stream.available()];
 			stream.read(bytes);
 			stream.close();
@@ -510,10 +510,7 @@ public class videoCamera extends JPanel {
 								.post("https://api.projectoxford.ai/face/v1.0/identify")
 								.header("Ocp-Apim-Subscription-Key", key)
 								.header("Content-Type", "application/json")
-								.field("personGroupId", "sample_group")
-								.field("Host", "api.projectoxford.ai")
-								.field("maxNumOfCandidatesReturned", 1)
-								.field("faceIds", new String[]{faceID})
+								 .body("{\"personGroupId\":\"hackgroup\", \"maxNumOfCandidatesReturned\":1, \"faceIds\":[\""+faceID+"\"]}")
 								.asJsonAsync(new Callback<JsonNode>() {
 
 									public void failed(UnirestException e) {
@@ -527,6 +524,40 @@ public class videoCamera extends JPanel {
 										JsonNode body = response.getBody();
 										InputStream rawBody = response.getRawBody();
 										System.out.println(body.toString());
+										try {
+											String personId = (body.getArray().getJSONObject(0).getJSONArray("candidates").getJSONObject(0).getString("personId"));
+											
+											System.out.println(personId);
+											
+											Future<HttpResponse<JsonNode>> response3 = Unirest
+													.post("https://api.projectoxford.ai/face/v1.0/persongroups/hackgroup/persons/"+ personId)
+													.header("Ocp-Apim-Subscription-Key", key)
+													.asJsonAsync(new Callback<JsonNode>() {
+
+														public void failed(UnirestException e) {
+															System.out.println("The request has failed");
+														}
+
+														public void completed(HttpResponse<JsonNode> response) {
+															int code = response.getStatus();
+															Map<String, List<String>> headers = response
+																	.getHeaders();
+															JsonNode body = response.getBody();
+															InputStream rawBody = response.getRawBody();
+															System.out.println(body.toString());
+
+														}
+
+														public void cancelled() {
+															System.out.println("The request has been cancelled");
+														}
+													});
+											
+										} catch (JSONException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
+
 									}
 
 									public void cancelled() {
