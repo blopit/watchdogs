@@ -23,6 +23,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.videoio.VideoCapture;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
@@ -30,13 +31,15 @@ import org.opencv.objdetect.Objdetect;
 public class videoCamera extends JPanel {
 
 	VideoCapture camera;
+	int idx = 0;
 	static final int hbins = 30;
 	Point mx = new Point(0, 0);
 	int minTime = 5;
 	boolean inited = false;
 	int fire = 0;
 	boolean debug = false;
-	CascadeClassifier faceCascade = new CascadeClassifier("res/lbpcascades/lbpcascade_frontalface.xml");
+	CascadeClassifier faceCascade = new CascadeClassifier("res/haarcascades_cuda/haarcascade_frontalface_alt.xml");
+	CascadeClassifier faceCascadeProfile = new CascadeClassifier("res/haarcascades_cuda/haarcascade_profileface.xml");
 	ArrayList<Face> faces = new ArrayList<Face>();
 
 	public videoCamera(VideoCapture cam) {
@@ -46,6 +49,8 @@ public class videoCamera extends JPanel {
 	
 	public class Face {
 		Rect _bounds;
+		double _destBoundsX, _destBoundsY, _destBoundsW, _destBoundsH, 
+		_drawBoundsX, _drawBoundsY, _drawBoundsW, _drawBoundsH;
 		UID _id;
 		int _duration;
 		int _life;
@@ -55,6 +60,8 @@ public class videoCamera extends JPanel {
 		public Face(Rect bounds) {
 			_id = new UID();
 			_bounds = bounds;
+			_destBoundsX= _destBoundsY= _destBoundsW= _destBoundsH= 
+			_drawBoundsX= _drawBoundsY= _drawBoundsW= _drawBoundsH=0;
 			_duration = 0;
 			_sent = false;
 			color = new Color((int)(Math.random() * 0x1000000));
@@ -64,13 +71,22 @@ public class videoCamera extends JPanel {
 		public void keepAlive() {
 			_life = 20;
 			this._duration++;
-			if (_duration > 90){
-				//send
-			}
+			
+			_destBoundsX = _bounds.x;
+			_destBoundsY = _bounds.y;
+			_destBoundsW = _bounds.width;
+			_destBoundsH = _bounds.height;
 		}
 		
 		public void update() {
 			_life--;
+			
+			if (_duration > 10){
+				_drawBoundsX += -(_drawBoundsX - _destBoundsX) * 0.3;
+				_drawBoundsY += -(_drawBoundsY - _destBoundsY) * 0.3;
+				_drawBoundsW += -(_drawBoundsW - _destBoundsW) * 0.1;
+				_drawBoundsH += -(_drawBoundsH - _destBoundsH) * 0.1;
+			}
 		}
 		
 	}
@@ -110,8 +126,10 @@ public class videoCamera extends JPanel {
 		Face choose = null;
 		for (Face f : faces) {
 			double c = compareFace(f, bounds);
-			if ( c < 150 && (min == -1 || c < min)) {
-				f._bounds =  boundFace(f, bounds);//bounds;
+			if ( c < 256 && (min == -1 || c < min) ) {
+				
+				f._bounds =  bounds; //boundFace(f, bounds);//bounds;
+				
 				min = c;
 				choose = f;
 			}
@@ -227,6 +245,8 @@ public class videoCamera extends JPanel {
 		 * rect.height), new Scalar(0, 255, 0)); }
 		 */
 		MatOfRect facs = new MatOfRect();
+		MatOfRect facsProf = new MatOfRect();
+		
 		Mat grayFrame = new Mat();
 
 		// convert the frame in gray scale
@@ -247,11 +267,19 @@ public class videoCamera extends JPanel {
 		faceCascade.detectMultiScale(grayFrame, facs, 1.1, 2,
 				0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize,
 						absoluteFaceSize), new Size());
+		
+		faceCascadeProfile.detectMultiScale(grayFrame, facsProf, 1.1, 2,
+				0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize,
+						absoluteFaceSize), new Size());
 
 		BufferedImage image = Mat2BufferedImage(mat);
 		g.drawImage(image, 10, 10, image.getWidth(), image.getHeight(), null);
 		
-		Rect[] facesArray = facs.toArray();
+		Rect[] facArray = facs.toArray();
+		Rect[] facProfsArray = facsProf.toArray();
+		
+		Rect[] facesArray = concat(facProfsArray, facArray);
+		
 		System.out.println(facesArray.length);
 		
 		for (int i = 0; i < facesArray.length; i++) {
@@ -260,13 +288,26 @@ public class videoCamera extends JPanel {
 		
 		for (Face f : faces){
 			g2.setColor(f.color);
-			g2.drawRect((int) (f._bounds.tl().x),
-					(int) (f._bounds.tl().y),
-					(int) (f._bounds.br().x - f._bounds.tl().x),
-					(int) (f._bounds.br().y - f._bounds.tl().y));
+			g2.drawRect((int) (f._drawBoundsX),
+					(int) (f._drawBoundsY),
+					(int) (f._drawBoundsW),
+					(int) (f._drawBoundsH));
 			g2.setColor(Color.WHITE);
-			g2.drawString(new Integer(f._duration).toString(), (int)(f._bounds.tl().x), (int)(f._bounds.br().y));
+			g2.drawString(new Integer(f._duration).toString(), (int)(f._drawBoundsX), (int)(f._drawBoundsY + f._drawBoundsH));
 			f.update();
+			
+			if (f._duration > 40 && !f._sent){
+				f._sent = true;
+				Rect r = f._bounds;
+				r.x -= r.width * 0.25;
+				r.y -= r.height * 0.25;
+				r.width *= 1.5;
+				r.height *= 1.5;
+				
+				Mat m = mat.submat(r);
+				saveImage(m);
+			}
+			
 		}
 		g2.setColor(Color.BLACK);
 		
@@ -279,6 +320,20 @@ public class videoCamera extends JPanel {
 
 	}
 
+	public void saveImage(Mat subimg){
+		Imgcodecs.imwrite("filename" + idx + ".png",subimg);
+		idx++;
+	}
+	
+	public Rect[] concat(Rect[] a, Rect[] b) {
+		   int aLen = a.length;
+		   int bLen = b.length;
+		   Rect[] c= new Rect[aLen+bLen];
+		   System.arraycopy(a, 0, c, 0, aLen);
+		   System.arraycopy(b, 0, c, aLen, bLen);
+		   return c;
+		}
+	
 	public boolean compareMatOfPoint(MatOfPoint2f point, MatOfPoint2f approx) {
 		MatOfPoint2f c1f = new MatOfPoint2f(point.toArray());
 		MatOfPoint2f c2f = new MatOfPoint2f(approx.toArray());
