@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.rmi.server.UID;
@@ -25,6 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.FileEntity;
 import org.json.JSONException;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
@@ -44,8 +46,6 @@ import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.cloudinary.Cloudinary;
-
 public class videoCamera extends JPanel {
 
 	VideoCapture camera;
@@ -56,7 +56,6 @@ public class videoCamera extends JPanel {
 	boolean inited = false;
 	int fire = 0;
 	boolean debug = false;
-	Cloudinary cloudinary = new Cloudinary();
 
 	CascadeClassifier faceCascade = new CascadeClassifier(
 			"res/haarcascades_cuda/haarcascade_frontalface_alt.xml");
@@ -469,22 +468,22 @@ public class videoCamera extends JPanel {
 	public void saveImage(Mat subimg) {
 		idx++;
 
-		Imgcodecs.imwrite("filename" + idx + ".bmp", subimg);
+		Imgcodecs.imwrite("filename" + idx + ".png", subimg);
 
 		String key = "c2281afa671f40c1a58dd1a39aada04a";
 
-		byte[] b = null;
 		try {
-			b = extractBytes("filename" + idx + ".bmp");
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+			
+			final InputStream stream = new FileInputStream(new File("filename" + idx + ".jpg"));
+			final byte[] bytes = new byte[stream.available()];
+			stream.read(bytes);
+			stream.close();
 
-		Future<HttpResponse<JsonNode>> response = Unirest
+	Future<HttpResponse<JsonNode>> response = Unirest
 				.post("https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=false")
 				.header("Ocp-Apim-Subscription-Key", key)
-				.header("Content-Type", "application/octet-stream").body(b)
+				.header("Content-Type", "application/octet-stream")
+				.body( bytes )
 				.asJsonAsync(new Callback<JsonNode>() {
 
 					public void failed(UnirestException e) {
@@ -498,12 +497,53 @@ public class videoCamera extends JPanel {
 						JsonNode body = response.getBody();
 						InputStream rawBody = response.getRawBody();
 						System.out.println(body.toString());
+						String faceID = "";
+						try {
+							faceID = (body.getArray().getJSONObject(0).getString("faceId"));
+							System.out.println(faceID);
+						} catch (JSONException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						
+						Future<HttpResponse<JsonNode>> response2 = Unirest
+								.post("https://api.projectoxford.ai/face/v1.0/identify")
+								.header("Ocp-Apim-Subscription-Key", key)
+								.header("Content-Type", "application/json")
+								.field("personGroupId", "sample_group")
+								.field("Host", "api.projectoxford.ai")
+								.field("maxNumOfCandidatesReturned", 1)
+								.field("faceIds", new String[]{faceID})
+								.asJsonAsync(new Callback<JsonNode>() {
+
+									public void failed(UnirestException e) {
+										System.out.println("The request has failed");
+									}
+
+									public void completed(HttpResponse<JsonNode> response) {
+										int code = response.getStatus();
+										Map<String, List<String>> headers = response
+												.getHeaders();
+										JsonNode body = response.getBody();
+										InputStream rawBody = response.getRawBody();
+										System.out.println(body.toString());
+									}
+
+									public void cancelled() {
+										System.out.println("The request has been cancelled");
+									}
+								});
+						
 					}
 
 					public void cancelled() {
 						System.out.println("The request has been cancelled");
 					}
 				});
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
