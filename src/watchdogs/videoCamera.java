@@ -31,42 +31,17 @@ public class videoCamera extends JPanel {
 
 	VideoCapture camera;
 	static final int hbins = 30;
-	ArrayList<imm_line> proc_imm = new ArrayList<imm_line>();
 	Point mx = new Point(0, 0);
 	int minTime = 5;
 	boolean inited = false;
 	int fire = 0;
 	boolean debug = false;
-	CascadeClassifier faceCascade = new CascadeClassifier("res/haarcascade_frontalface_alt.xml");
+	CascadeClassifier faceCascade = new CascadeClassifier("res/lbpcascades/lbpcascade_frontalface.xml");
 	ArrayList<Face> faces = new ArrayList<Face>();
 
 	public videoCamera(VideoCapture cam) {
 
 		camera = cam;
-	}
-	
-	public class imm_line {
-		MatOfPoint2f point;
-		int val;
-		boolean fired;
-
-		public imm_line(MatOfPoint2f p) {
-			val = 2;
-			point = p;
-			fired = false;
-		}
-
-		public void plus() {
-			val += 2;
-			if (val > 30) {
-				val = 30;
-			}
-		}
-
-		public void minus() {
-			val--;
-		}
-
 	}
 	
 	public class Face {
