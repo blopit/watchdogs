@@ -447,18 +447,13 @@ public class videoCamera extends JPanel {
 	}
 
 	public void saveImage(Mat subimg) {
-		Imgcodecs.imwrite("filename" + idx + ".png", subimg);
 		idx++;
-		
-		int cols = subimg.cols();
-        int rows = subimg.rows();
-        int elemSize = (int) subimg.elemSize();
-        int type = subimg.type();
+		Imgcodecs.imwrite("filename" + idx + ".png", subimg);
 
 		
 		try {
 			Future<HttpResponse<JsonNode>> response = Unirest.post("https://lambda-face-recognition.p.mashape.com/recognize")
-					.header("X-Mashape-Key", "QaZQD7tDdimsheu0azGvGa4N8Zkdp1hyRGFjsnxwLDrvWdgNNh")
+					.header("X-Mashape-Key", "DStK87JopSmshPMrr3mnrgFvN30Mp1o3bvejsnf4ph7uXWZz8B")
 					.field("album", "waterloopeople")
 					.field("albumkey", "9fa61f639bd289efb4b5f19a422f15a65f2af096b6de013d0088f0b4ae86af21")
 					.field("files",  Base64.encodeBase64(FileUtils.readFileToByteArray(new File("filename" + idx + ".png"))))
