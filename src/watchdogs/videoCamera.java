@@ -434,7 +434,7 @@ public class videoCamera extends JPanel {
 
 			g2.drawString("Name: " + f.drawName, (int) (f._drawBoundsX),
 					(int) (f._drawBoundsY + f._drawBoundsH));
-			g2.drawString("Occupation: " + f.drawOcc, (int) (f._drawBoundsX),
+			g2.drawString("Details: " + f.drawOcc, (int) (f._drawBoundsX),
 					(int) (f._drawBoundsY + f._drawBoundsH) + 16);
 
 			f.update();
