@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,10 +17,15 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.http.entity.ContentType;
+import org.json.JSONException;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfRect;
@@ -34,10 +40,11 @@ import org.opencv.videoio.VideoCapture;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
-
+import com.cloudinary.Cloudinary;
 
 public class videoCamera extends JPanel {
 
@@ -49,6 +56,8 @@ public class videoCamera extends JPanel {
 	boolean inited = false;
 	int fire = 0;
 	boolean debug = false;
+	Cloudinary cloudinary = new Cloudinary();
+
 	CascadeClassifier faceCascade = new CascadeClassifier(
 			"res/haarcascades_cuda/haarcascade_frontalface_alt.xml");
 	CascadeClassifier faceCascadeProfile = new CascadeClassifier(
@@ -429,9 +438,8 @@ public class videoCamera extends JPanel {
 
 				Mat m = mat.submat(r);
 				saveImage(m);
-				//f.name = "Shrenil";
-		
-						
+				// f.name = "Shrenil";
+
 			}
 
 		}
@@ -446,41 +454,57 @@ public class videoCamera extends JPanel {
 
 	}
 
+	public byte[] extractBytes(String ImageName) throws IOException {
+		// open image
+		File imgPath = new File(ImageName);
+		BufferedImage bufferedImage = ImageIO.read(imgPath);
+
+		// get DataBufferBytes from Raster
+		WritableRaster raster = bufferedImage.getRaster();
+		DataBufferByte data = (DataBufferByte) raster.getDataBuffer();
+
+		return (data.getData());
+	}
+
 	public void saveImage(Mat subimg) {
 		idx++;
-		Imgcodecs.imwrite("filename" + idx + ".png", subimg);
 
-		
+		Imgcodecs.imwrite("filename" + idx + ".bmp", subimg);
+
+		String key = "c2281afa671f40c1a58dd1a39aada04a";
+
+		byte[] b = null;
 		try {
-			Future<HttpResponse<JsonNode>> response = Unirest.post("https://lambda-face-recognition.p.mashape.com/recognize")
-					.header("X-Mashape-Key", "DStK87JopSmshPMrr3mnrgFvN30Mp1o3bvejsnf4ph7uXWZz8B")
-					.field("album", "waterloopeople")
-					.field("albumkey", "9fa61f639bd289efb4b5f19a422f15a65f2af096b6de013d0088f0b4ae86af21")
-					.field("files",  Base64.encodeBase64(FileUtils.readFileToByteArray(new File("filename" + idx + ".png"))))
-					.asJsonAsync(new Callback<JsonNode>() {
-
-					    public void failed(UnirestException e) {
-					        System.out.println("The request has failed");
-					    }
-
-					    public void completed(HttpResponse<JsonNode> response) {
-					         int code = response.getStatus();
-					         Map<String, List<String>> headers = response.getHeaders();
-					         JsonNode body = response.getBody();
-					         InputStream rawBody = response.getRawBody();
-					         System.out.println(body.toString());
-					    }
-
-					    public void cancelled() {
-					        System.out.println("The request has been cancelled");
-					    }
-					});
-		} catch (IOException e) {
+			b = extractBytes("filename" + idx + ".bmp");
+		} catch (IOException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
-		
-		
+
+		Future<HttpResponse<JsonNode>> response = Unirest
+				.post("https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=false")
+				.header("Ocp-Apim-Subscription-Key", key)
+				.header("Content-Type", "application/octet-stream").body(b)
+				.asJsonAsync(new Callback<JsonNode>() {
+
+					public void failed(UnirestException e) {
+						System.out.println("The request has failed");
+					}
+
+					public void completed(HttpResponse<JsonNode> response) {
+						int code = response.getStatus();
+						Map<String, List<String>> headers = response
+								.getHeaders();
+						JsonNode body = response.getBody();
+						InputStream rawBody = response.getRawBody();
+						System.out.println(body.toString());
+					}
+
+					public void cancelled() {
+						System.out.println("The request has been cancelled");
+					}
+				});
+
 	}
 
 	public Rect[] concat(Rect[] a, Rect[] b) {

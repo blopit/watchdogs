@@ -24,5 +24,6 @@
 	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/org.json.jar"/>
 	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/org-apache-commons-lang.jar"/>
 	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/org.apache.commons.io.jar"/>
+	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/cloudinary-1.0.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
