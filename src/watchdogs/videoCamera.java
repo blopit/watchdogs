@@ -6,7 +6,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -18,18 +17,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
 
-import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
 import org.json.JSONException;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
@@ -42,10 +33,10 @@ import org.opencv.videoio.VideoCapture;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
+
 public class videoCamera extends JPanel {
 
 	VideoCapture camera;
@@ -68,7 +59,7 @@ public class videoCamera extends JPanel {
 
 		camera = cam;
 	}
-	
+
 	public static Color blend(Color c0, Color c1, double weight) {
 		double weight0 = 1 - weight;
 		double r = weight0 * c0.getRed() + weight * c1.getRed();
@@ -78,7 +69,7 @@ public class videoCamera extends JPanel {
 
 		return new Color((int) r, (int) g, (int) b, (int) a);
 	}
-	
+
 	public class Face {
 		Rect _bounds;
 		double _destBoundsX, _destBoundsY, _destBoundsW, _destBoundsH,
@@ -133,8 +124,8 @@ public class videoCamera extends JPanel {
 				_drawBoundsW += -(_drawBoundsW - _destBoundsW) * 0.1;
 				_drawBoundsH += -(_drawBoundsH - _destBoundsH) * 0.1;
 			}
-			
-			if ( loading ) {
+
+			if (loading) {
 				rotate += 15;
 				rotate = rotate % 360;
 			} else {
@@ -142,11 +133,11 @@ public class videoCamera extends JPanel {
 					rotate += 15;
 				else
 					rotate = 0;
-				
+
 			}
-			
+
 			li -= 0.05;
-			if (li < 0){
+			if (li < 0) {
 				li = 0;
 			}
 
@@ -202,16 +193,15 @@ public class videoCamera extends JPanel {
 			}
 
 		} else {
-			//Random random = new Random();
-			//int index = random.nextInt(s.length());
+			// Random random = new Random();
+			// int index = random.nextInt(s.length());
 			for (int i = 0; i < speed; i++) {
 				int index = 0;
-				for(;index < Math.max(act.length(),s.length()) - 1; index++) {
+				for (; index < Math.max(act.length(), s.length()) - 1; index++) {
 					if (s.charAt(index) != act.charAt(index))
 						break;
 				}
-					
-				
+
 				StringBuilder myName = new StringBuilder(s);
 				myName.setCharAt(index, act.charAt(index));
 				s = myName.toString();
@@ -276,18 +266,6 @@ public class videoCamera extends JPanel {
 		}
 	}
 
-	public double polygonArea(ArrayList<Point> pnts) {
-		double area = 0;
-		int j = pnts.size() - 1;
-
-		for (int i = 0; i < pnts.size(); i++) {
-			area = area + (pnts.get(j).x + pnts.get(i).x)
-					* (pnts.get(j).y - pnts.get(i).y);
-			j = i;
-		}
-		return area / 2;
-	}
-
 	public BufferedImage Mat2BufferedImage(Mat m) {
 
 		int type = BufferedImage.TYPE_BYTE_GRAY;
@@ -302,42 +280,6 @@ public class videoCamera extends JPanel {
 				.getDataBuffer()).getData();
 		System.arraycopy(b, 0, targetPixels, 0, b.length);
 		return img;
-	}
-
-	public double pDistance(double x, double y, double x1, double y1,
-			double x2, double y2) {
-
-		double A = x - x1;
-		double B = y - y1;
-		double C = x2 - x1;
-		double D = y2 - y1;
-
-		double dot = A * C + B * D;
-		double len_sq = C * C + D * D;
-		double param = -1;
-		if (len_sq != 0)
-			param = dot / len_sq;
-
-		double xx, yy;
-
-		if (param < 0) {
-			xx = x1;
-			yy = y1;
-		} else if (param > 1) {
-			xx = x2;
-			yy = y2;
-		} else {
-			xx = x1 + param * C;
-			yy = y1 + param * D;
-		}
-
-		double dx = x - xx;
-		double dy = y - yy;
-		return Math.sqrt(dx * dx + dy * dy);
-	}
-
-	public double pointToLineDistance(Point v, Point w, Point p) {
-		return pDistance(p.x, p.y, v.x, v.y, w.x, w.y);
 	}
 
 	public void drawDiamond(Graphics g, int _drawBoundsX, int _drawBoundsY,
@@ -442,46 +384,51 @@ public class videoCamera extends JPanel {
 		}
 
 		for (Face f : faces) {
-			g2.setColor(blend(f.color,Color.WHITE,f.li));
-			g2.setStroke(new BasicStroke(4 + (int)(f.li*4)));
+			g2.setColor(blend(f.color, Color.WHITE, f.li));
+			g2.setStroke(new BasicStroke(4 + (int) (f.li * 4)));
 
-			/*drawDiamond(
-					g2,
-					(int) (f._drawBoundsX + f._drawBoundsW / 2),
-					(int) (f._drawBoundsY + f._drawBoundsH / 2 - f._drawBoundsH * 0.75),
-					(int) (f._drawBoundsX + f._drawBoundsW * 2),
-					(int) (f._drawBoundsY + f._drawBoundsH * 2 - f._drawBoundsH * 0.75));*/
-			
+			/*
+			 * drawDiamond( g2, (int) (f._drawBoundsX + f._drawBoundsW / 2),
+			 * (int) (f._drawBoundsY + f._drawBoundsH / 2 - f._drawBoundsH *
+			 * 0.75), (int) (f._drawBoundsX + f._drawBoundsW * 2), (int)
+			 * (f._drawBoundsY + f._drawBoundsH * 2 - f._drawBoundsH * 0.75));
+			 */
+
 			double cx = f._drawBoundsX + f._drawBoundsW / 2;
 			double cy = f._drawBoundsY + f._drawBoundsH / 2;
 			double ro = f._drawBoundsW * 0.75;
-			
-			for (int i = 0; i < 4 ; i++){
-				double rot = Math.toRadians(f.rotate + i * 90);
-				double rot2 = Math.toRadians(f.rotate + i * 90 + 45);
-				double rot3 = Math.toRadians(f.rotate + i * 90 - 45);
-				int dd = - (int) (ro * 0.3 + 0.3 * f.li);
-				g2.drawLine((int)(cx + ro * Math.cos(rot)), 
-						(int)(cy + ro * Math.sin(rot) ), 
-						(int)(cx + ro * Math.cos(rot) + dd * Math.cos(rot2)), 
-						(int)(cy + ro * Math.sin(rot) + dd * Math.sin(rot2)));
-				
-				g2.drawLine((int)(cx + ro * Math.cos(rot)), 
-						(int)(cy + ro * Math.sin(rot) ), 
-						(int)(cx + ro * Math.cos(rot) + dd * Math.cos(rot3)), 
-						(int)(cy + ro * Math.sin(rot) + dd * Math.sin(rot3)));
-				
-				rot = Math.toRadians(i * 90);
-				rot2 = Math.toRadians(i * 90 + 45 + 90);
-				rot3 = Math.toRadians(i * 90 - 45);
-				double rot4 = Math.toRadians(i * 90 + 90);
-				
-				g2.drawLine((int)(cx + ro * Math.cos(rot) + dd * Math.cos(rot3)), 
-						(int)(cy + ro * Math.sin(rot) + dd * Math.sin(rot3)),
-						(int)(cx + ro * Math.cos(rot4) + dd * Math.cos(rot2)), 
-						(int)(cy + ro * Math.sin(rot4) + dd * Math.sin(rot2)));
+
+			for (int i = 0; i < 4; i++) {
+				double rot = Math.toRadians(i * 90);
+				double rot2 = Math.toRadians(i * 90 + 45);
+				double rot3 = Math.toRadians(i * 90 - 45);
+				int dd = -(int) (ro * 0.3 + 0.3 * f.li);
+
+				g2.drawLine((int) (cx + ro * Math.cos(rot)), (int) (cy + ro
+						* Math.sin(rot)), (int) (cx + ro * Math.cos(rot) + dd
+						* Math.cos(rot2)), (int) (cy + ro * Math.sin(rot) + dd
+						* Math.sin(rot2)));
+
+				g2.drawLine((int) (cx + ro * Math.cos(rot)), (int) (cy + ro
+						* Math.sin(rot)), (int) (cx + ro * Math.cos(rot) + dd
+						* Math.cos(rot3)), (int) (cy + ro * Math.sin(rot) + dd
+						* Math.sin(rot3)));
+
+				rot = Math.toRadians(f.rotate + i * 90);
+				rot2 = Math.toRadians(f.rotate + i * 90 + 45 + 90);
+				rot3 = Math.toRadians(f.rotate + i * 90 - 45);
+				double rot4 = Math.toRadians(f.rotate + i * 90 + 90);
+				ro = f._drawBoundsW
+						* (0.5 + 0.25 * Math.cos(Math.toRadians(f.rotate)));
+
+				g2.drawLine(
+						(int) (cx + ro * Math.cos(rot) + dd * Math.cos(rot3)),
+						(int) (cy + ro * Math.sin(rot) + dd * Math.sin(rot3)),
+						(int) (cx + ro * Math.cos(rot4) + dd * Math.cos(rot2)),
+						(int) (cy + ro * Math.sin(rot4) + dd * Math.sin(rot2)));
+
+				ro = f._drawBoundsW * 0.75;
 			}
-			
 
 			g2.setColor(Color.WHITE);
 
@@ -500,11 +447,15 @@ public class videoCamera extends JPanel {
 				r.y -= r.height * 0.25;
 				r.width *= 1.5;
 				r.height *= 1.5;
-				
-				if (r.x < 0 ) r.x = 0;
-				if (r.y < 0) r.y = 0;
-				if (r.width > mat.cols()) r.width = mat.cols();
-				if (r.height > mat.rows()) r.height = mat.rows();
+
+				if (r.x < 0)
+					r.x = 0;
+				if (r.y < 0)
+					r.y = 0;
+				if (r.width > mat.cols())
+					r.width = mat.cols();
+				if (r.height > mat.rows())
+					r.height = mat.rows();
 
 				Mat m = mat.submat(r);
 				saveImage(m, f);
@@ -523,18 +474,6 @@ public class videoCamera extends JPanel {
 		}
 
 	}
-	
-	public byte[] extractBytes(String ImageName) throws IOException {
-		// open image
-		File imgPath = new File(ImageName);
-		BufferedImage bufferedImage = ImageIO.read(imgPath);
-
-		// get DataBufferBytes from Raster
-		WritableRaster raster = bufferedImage.getRaster();
-		DataBufferByte data = (DataBufferByte) raster.getDataBuffer();
-
-		return (data.getData());
-	}
 
 	public void saveImage(Mat subimg, Face f) {
 		idx++;
@@ -545,123 +484,160 @@ public class videoCamera extends JPanel {
 		String key = "c2281afa671f40c1a58dd1a39aada04a";
 
 		try {
-			
-			final InputStream stream = new FileInputStream(new File("filename" + idx + ".jpg"));
+
+			final InputStream stream = new FileInputStream(new File("filename"
+					+ idx + ".jpg"));
 			final byte[] bytes = new byte[stream.available()];
 			stream.read(bytes);
 			stream.close();
 
-	Future<HttpResponse<JsonNode>> response = Unirest
-				.post("https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=false")
-				.header("Ocp-Apim-Subscription-Key", key)
-				.header("Content-Type", "application/octet-stream")
-				.body( bytes )
-				.asJsonAsync(new Callback<JsonNode>() {
+			Future<HttpResponse<JsonNode>> response = Unirest
+					.post("https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=false")
+					.header("Ocp-Apim-Subscription-Key", key)
+					.header("Content-Type", "application/octet-stream")
+					.body(bytes).asJsonAsync(new Callback<JsonNode>() {
 
-					public void failed(UnirestException e) {
-						System.out.println("The request has failed");
-						f._duration = 30;
-					}
-
-					public void completed(HttpResponse<JsonNode> response) {
-						int code = response.getStatus();
-						Map<String, List<String>> headers = response
-								.getHeaders();
-						JsonNode body = response.getBody();
-						InputStream rawBody = response.getRawBody();
-						System.out.println(body.toString());
-						String faceID = "";
-						try {
-							faceID = (body.getArray().getJSONObject(0).getString("faceId"));
-							System.out.println(faceID);
-						} catch (JSONException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
+						public void failed(UnirestException e) {
+							System.out.println("The request has failed");
 							f._duration = 30;
 						}
-						
-						Future<HttpResponse<JsonNode>> response2 = Unirest
-								.post("https://api.projectoxford.ai/face/v1.0/identify")
-								.header("Ocp-Apim-Subscription-Key", key)
-								.header("Content-Type", "application/json")
-								 .body("{\"personGroupId\":\"hackgroup\", \"maxNumOfCandidatesReturned\":1, \"faceIds\":[\""+faceID+"\"]}")
-								.asJsonAsync(new Callback<JsonNode>() {
 
-									public void failed(UnirestException e) {
-										System.out.println("The request has failed");
-										f._duration = 30;
-									}
+						public void completed(HttpResponse<JsonNode> response) {
+							int code = response.getStatus();
+							Map<String, List<String>> headers = response
+									.getHeaders();
+							JsonNode body = response.getBody();
+							InputStream rawBody = response.getRawBody();
+							System.out.println(body.toString());
+							String faceID = "";
+							try {
+								faceID = (body.getArray().getJSONObject(0)
+										.getString("faceId"));
+								System.out.println(faceID);
+							} catch (JSONException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+								f._duration = 30;
+							}
 
-									public void completed(HttpResponse<JsonNode> response) {
-										int code = response.getStatus();
-										Map<String, List<String>> headers = response
-												.getHeaders();
-										JsonNode body = response.getBody();
-										InputStream rawBody = response.getRawBody();
-										System.out.println(body.toString());
-										try {
-											String personId = (body.getArray().getJSONObject(0).getJSONArray("candidates").getJSONObject(0).getString("personId"));
-											
-											System.out.println(personId);
-											
-											Future<HttpResponse<JsonNode>> response3 = Unirest
-													.get("https://api.projectoxford.ai/face/v1.0/persongroups/hackgroup/persons/"+ personId)
-													.header("Ocp-Apim-Subscription-Key", key)
-													.header("Content-Type", "application/json")
-													.asJsonAsync(new Callback<JsonNode>() {
+							Future<HttpResponse<JsonNode>> response2 = Unirest
+									.post("https://api.projectoxford.ai/face/v1.0/identify")
+									.header("Ocp-Apim-Subscription-Key", key)
+									.header("Content-Type", "application/json")
+									.body("{\"personGroupId\":\"hackgroup\", \"maxNumOfCandidatesReturned\":1, \"faceIds\":[\""
+											+ faceID + "\"]}")
+									.asJsonAsync(new Callback<JsonNode>() {
 
-														public void failed(UnirestException e) {
-															System.out.println("The request has failed");
-															f._duration = 30;
-														}
-
-														public void completed(HttpResponse<JsonNode> response) {
-															int code = response.getStatus();
-															Map<String, List<String>> headers = response
-																	.getHeaders();
-															JsonNode body = response.getBody();
-															InputStream rawBody = response.getRawBody();
-															System.out.println(body.toString());
-															
-															try {
-																f.name = body.getObject().getString("name").toUpperCase();
-																f.occ = body.getObject().getString("userData"); 
-																f.loading = false;
-															} catch (JSONException e) {
-																// TODO Auto-generated catch block
-																e.printStackTrace();
-																f._duration = 30;
-															}
-
-														}
-
-														public void cancelled() {
-															System.out.println("The request has been cancelled");
-															f._duration = 30;
-														}
-													});
-											
-										} catch (JSONException e) {
-											// TODO Auto-generated catch block
-											e.printStackTrace();
+										public void failed(UnirestException e) {
+											System.out
+													.println("The request has failed");
 											f._duration = 30;
 										}
 
-									}
+										public void completed(
+												HttpResponse<JsonNode> response) {
+											int code = response.getStatus();
+											Map<String, List<String>> headers = response
+													.getHeaders();
+											JsonNode body = response.getBody();
+											InputStream rawBody = response
+													.getRawBody();
+											System.out.println(body.toString());
+											try {
+												String personId = (body
+														.getArray()
+														.getJSONObject(0)
+														.getJSONArray(
+																"candidates")
+														.getJSONObject(0)
+														.getString("personId"));
 
-									public void cancelled() {
-										System.out.println("The request has been cancelled");
-										f._duration = 30;
-									}
-								});
-						
-					}
+												System.out.println(personId);
 
-					public void cancelled() {
-						System.out.println("The request has been cancelled");
-						f._duration = 30;
-					}
-				});
+												Future<HttpResponse<JsonNode>> response3 = Unirest
+														.get("https://api.projectoxford.ai/face/v1.0/persongroups/hackgroup/persons/"
+																+ personId)
+														.header("Ocp-Apim-Subscription-Key",
+																key)
+														.header("Content-Type",
+																"application/json")
+														.asJsonAsync(
+																new Callback<JsonNode>() {
+
+																	public void failed(
+																			UnirestException e) {
+																		System.out
+																				.println("The request has failed");
+																		f._duration = 30;
+																	}
+
+																	public void completed(
+																			HttpResponse<JsonNode> response) {
+																		int code = response
+																				.getStatus();
+																		Map<String, List<String>> headers = response
+																				.getHeaders();
+																		JsonNode body = response
+																				.getBody();
+																		InputStream rawBody = response
+																				.getRawBody();
+																		System.out
+																				.println(body
+																						.toString());
+
+																		try {
+																			f.name = body
+																					.getObject()
+																					.getString(
+																							"name")
+																					.toUpperCase();
+																			f.occ = body
+																					.getObject()
+																					.getString(
+																							"userData");
+																			f.loading = false;
+																		} catch (JSONException e) {
+																			// TODO
+																			// Auto-generated
+																			// catch
+																			// block
+																			e.printStackTrace();
+																			f._duration = 30;
+																		}
+
+																	}
+
+																	public void cancelled() {
+																		System.out
+																				.println("The request has been cancelled");
+																		f._duration = 30;
+																	}
+																});
+
+											} catch (JSONException e) {
+												// TODO Auto-generated catch
+												// block
+												e.printStackTrace();
+												f._duration = 30;
+											}
+
+										}
+
+										public void cancelled() {
+											System.out
+													.println("The request has been cancelled");
+											f._duration = 30;
+										}
+									});
+
+						}
+
+						public void cancelled() {
+							System.out
+									.println("The request has been cancelled");
+							f._duration = 30;
+						}
+					});
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -679,80 +655,4 @@ public class videoCamera extends JPanel {
 		return c;
 	}
 
-	public boolean compareMatOfPoint(MatOfPoint2f point, MatOfPoint2f approx) {
-		MatOfPoint2f c1f = new MatOfPoint2f(point.toArray());
-		MatOfPoint2f c2f = new MatOfPoint2f(approx.toArray());
-
-		Point p1A = new Point(c1f.get(0, 0)[0], c1f.get(0, 0)[1]);
-		Point p1B = new Point(c1f.get(1, 0)[0], c1f.get(1, 0)[1]);
-		Point p2A = new Point(c2f.get(0, 0)[0], c2f.get(0, 0)[1]);
-		Point p2B = new Point(c2f.get(1, 0)[0], c2f.get(1, 0)[1]);
-
-		if (distance(p1A, p2A) < 4 && distance(p1B, p2B) < 4) {
-			return true;
-		} else if (distance(p1A, p2B) < 4 && distance(p1B, p2A) < 4) {
-			return true;
-		}
-		return false;
-	}
-
-	public double distance(Point p1, Point p2) {
-		return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-	}
-
-	public double angleBetween(Point center, Point current, Point previous) {
-
-		return Math.toDegrees(Math.atan2(current.x - center.x, current.y
-				- center.y)
-				- Math.atan2(previous.x - center.x, previous.y - center.y));
-	}
-
-	public static boolean contains(ArrayList<Point> points, Point test) {
-		int i;
-		int j;
-		boolean result = false;
-		for (i = 0, j = points.size() - 1; i < points.size(); j = i++) {
-			if ((points.get(i).y > test.y) != (points.get(j).y > test.y)
-					&& (test.x < (points.get(j).x - points.get(i).x)
-							* (test.y - points.get(i).y)
-							/ (points.get(j).y - points.get(i).y)
-							+ points.get(i).x)) {
-				result = !result;
-			}
-		}
-		return result;
-	}
-
-	public double percentageOfProjection(Point startPoint, Point endPoint,
-			Point testPoint) {
-
-		double scalar = ((endPoint.x - startPoint.x)
-				* (testPoint.x - startPoint.x) + (endPoint.y - startPoint.y)
-				* (testPoint.y - startPoint.y))
-				/ (Math.pow((endPoint.x - startPoint.x), 2) + Math.pow(
-						(endPoint.y - startPoint.y), 2));
-		int ProjectionX = (int) (startPoint.x + ((endPoint.x - startPoint.x) * scalar));
-		int ProjectionY = (int) (startPoint.y + ((endPoint.y - startPoint.y) * scalar));
-		Point newProjectionPoint = new Point(ProjectionX, ProjectionY);
-		double linefromStarttoEnd = distance(startPoint, endPoint);
-		double linefromProjectiontoEnd = distance(startPoint,
-				newProjectionPoint);
-		return (double) (linefromProjectiontoEnd / linefromStarttoEnd);
-	}
-
-	public Mat turnGray(Mat img)
-
-	{
-		Mat mat1 = new Mat();
-		Imgproc.cvtColor(img, mat1, Imgproc.COLOR_RGB2GRAY);
-		return mat1;
-	}
-
-	public Mat threash(Mat img) {
-		Mat threshed = new Mat();
-		int SENSITIVITY_VALUE = 100;
-		Imgproc.threshold(img, threshed, SENSITIVITY_VALUE, 255,
-				Imgproc.THRESH_BINARY);
-		return threshed;
-	}
 }
