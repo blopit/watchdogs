@@ -37,7 +37,7 @@ public class videoCamera extends JPanel {
 	boolean inited = false;
 	int fire = 0;
 	boolean debug = false;
-	CascadeClassifier faceCascade = new CascadeClassifier("/Users/shrenilpatel/Google Drive/projecggt/EngHack/src/haarcascade_frontalface_alt.xml");
+	CascadeClassifier faceCascade = new CascadeClassifier("res/haarcascade_frontalface_alt.xml");
 	ArrayList<Face> faces = new ArrayList<Face>();
 
 	public videoCamera(VideoCapture cam) {
