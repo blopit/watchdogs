@@ -131,6 +131,8 @@ public class videoCamera extends JPanel {
 
 			if (occ == null) {
 				drawOcc = randofy(drawOcc, 6);
+			} else {
+				drawOcc = randoSet(drawOcc, occ, 12);
 			}
 
 		}
@@ -173,11 +175,20 @@ public class videoCamera extends JPanel {
 			}
 
 		} else {
-			Random random = new Random();
-			int index = random.nextInt(s.length());
-			StringBuilder myName = new StringBuilder(s);
-			myName.setCharAt(index, act.charAt(index));
-			s = myName.toString();
+			//Random random = new Random();
+			//int index = random.nextInt(s.length());
+			for (int i = 0; i < entropy; i++) {
+				int index = 0;
+				for(;index < Math.max(act.length(),s.length()) - 1; index++) {
+					if (s.charAt(index) != act.charAt(index))
+						break;
+				}
+					
+				
+				StringBuilder myName = new StringBuilder(s);
+				myName.setCharAt(index, act.charAt(index));
+				s = myName.toString();
+			}
 		}
 
 		return s;
@@ -434,9 +445,14 @@ public class videoCamera extends JPanel {
 				r.y -= r.height * 0.25;
 				r.width *= 1.5;
 				r.height *= 1.5;
+				
+				if (r.x < 0 ) r.x = 0;
+				if (r.y < 0) r.y = 0;
+				if (r.width > mat.cols()) r.width = mat.cols();
+				if (r.height > mat.rows()) r.height = mat.rows();
 
 				Mat m = mat.submat(r);
-				saveImage(m);
+				saveImage(m, f);
 				// f.name = "Shrenil";
 
 			}
@@ -465,7 +481,7 @@ public class videoCamera extends JPanel {
 		return (data.getData());
 	}
 
-	public void saveImage(Mat subimg) {
+	public void saveImage(Mat subimg, Face f) {
 		idx++;
 
 		Imgcodecs.imwrite("filename" + idx + ".png", subimg);
@@ -488,6 +504,7 @@ public class videoCamera extends JPanel {
 
 					public void failed(UnirestException e) {
 						System.out.println("The request has failed");
+						f._duration = 0;
 					}
 
 					public void completed(HttpResponse<JsonNode> response) {
@@ -504,6 +521,7 @@ public class videoCamera extends JPanel {
 						} catch (JSONException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
+							f._duration = 0;
 						}
 						
 						Future<HttpResponse<JsonNode>> response2 = Unirest
@@ -515,6 +533,7 @@ public class videoCamera extends JPanel {
 
 									public void failed(UnirestException e) {
 										System.out.println("The request has failed");
+										f._duration = 0;
 									}
 
 									public void completed(HttpResponse<JsonNode> response) {
@@ -530,12 +549,14 @@ public class videoCamera extends JPanel {
 											System.out.println(personId);
 											
 											Future<HttpResponse<JsonNode>> response3 = Unirest
-													.post("https://api.projectoxford.ai/face/v1.0/persongroups/hackgroup/persons/"+ personId)
+													.get("https://api.projectoxford.ai/face/v1.0/persongroups/hackgroup/persons/"+ personId)
 													.header("Ocp-Apim-Subscription-Key", key)
+													.header("Content-Type", "application/json")
 													.asJsonAsync(new Callback<JsonNode>() {
 
 														public void failed(UnirestException e) {
 															System.out.println("The request has failed");
+															f._duration = 0;
 														}
 
 														public void completed(HttpResponse<JsonNode> response) {
@@ -545,23 +566,35 @@ public class videoCamera extends JPanel {
 															JsonNode body = response.getBody();
 															InputStream rawBody = response.getRawBody();
 															System.out.println(body.toString());
+															
+															try {
+																f.name = body.getObject().getString("name");
+																f.occ = body.getObject().getString("userData"); 
+															} catch (JSONException e) {
+																// TODO Auto-generated catch block
+																e.printStackTrace();
+																f._duration = 0;
+															}
 
 														}
 
 														public void cancelled() {
 															System.out.println("The request has been cancelled");
+															f._duration = 0;
 														}
 													});
 											
 										} catch (JSONException e) {
 											// TODO Auto-generated catch block
 											e.printStackTrace();
+											f._duration = 0;
 										}
 
 									}
 
 									public void cancelled() {
 										System.out.println("The request has been cancelled");
+										f._duration = 0;
 									}
 								});
 						
@@ -569,11 +602,13 @@ public class videoCamera extends JPanel {
 
 					public void cancelled() {
 						System.out.println("The request has been cancelled");
+						f._duration = 0;
 					}
 				});
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			f._duration = 0;
 		}
 
 	}
