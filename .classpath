@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV-3.1.0"/>
 	<classpathentry kind="lib" path="lib/unirest-java-1.4.9.jar"/>
+	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/opencv-3.1.0/bin/opencv-310.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
