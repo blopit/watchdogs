@@ -2,27 +2,9 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/opencv">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/Users/shrenilpatel/Downloads/opencv-3.1.0/lib"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/unirest-java-1.4.9.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-client-4.5.2/lib/httpclient-win-4.5.2.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-client-4.5.2/lib/httpclient-cache-4.5.2.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-client-4.5.2/lib/fluent-hc-4.5.2.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-client-4.5.2/lib/httpmime-4.5.2.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-client-4.5.2/lib/httpclient-4.5.2.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-client-4.5.2/lib/httpcore-4.4.4.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-client-4.5.2/lib/jna-platform-4.1.0.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-client-4.5.2/lib/jna-4.1.0.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-asyncclient-4.1.1/lib/commons-codec-1.9.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-asyncclient-4.1.1/lib/commons-logging-1.2.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-asyncclient-4.1.1/lib/httpasyncclient-4.1.1.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-asyncclient-4.1.1/lib/httpasyncclient-cache-4.1.1.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/httpcomponents-asyncclient-4.1.1/lib/httpcore-nio-4.4.4.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/org.json.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/org-apache-commons-lang.jar"/>
-	<classpathentry kind="lib" path="/Users/shrenilpatel/Downloads/org.apache.commons.io.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV-3.1.0"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.10.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io-1.3.2.jar"/>
+	<classpathentry kind="lib" path="lib/unirest-java-1.4.9.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
