@@ -68,11 +68,21 @@ public class videoCamera extends JPanel {
 
 		camera = cam;
 	}
+	
+	public static Color blend(Color c0, Color c1, double weight) {
+		double weight0 = 1 - weight;
+		double r = weight0 * c0.getRed() + weight * c1.getRed();
+		double g = weight0 * c0.getGreen() + weight * c1.getGreen();
+		double b = weight0 * c0.getBlue() + weight * c1.getBlue();
+		double a = Math.min(c0.getAlpha(), c1.getAlpha());
 
+		return new Color((int) r, (int) g, (int) b, (int) a);
+	}
+	
 	public class Face {
 		Rect _bounds;
 		double _destBoundsX, _destBoundsY, _destBoundsW, _destBoundsH,
-				_drawBoundsX, _drawBoundsY, _drawBoundsW, _drawBoundsH;
+				_drawBoundsX, _drawBoundsY, _drawBoundsW, _drawBoundsH, li;
 		UID _id;
 		int _duration;
 		int _life;
@@ -81,7 +91,7 @@ public class videoCamera extends JPanel {
 
 		String name, drawName, occ, drawOcc;
 
-		int rotate;
+		double rotate;
 		boolean loading;
 
 		public Face(Rect bounds) {
@@ -93,6 +103,7 @@ public class videoCamera extends JPanel {
 			_sent = false;
 			color = new Color((int) (Math.random() * 0x1000000));
 			_life = 20;
+			li = 0;
 
 			name = null;
 			drawName = "BcdZaXbabYe";
@@ -121,6 +132,22 @@ public class videoCamera extends JPanel {
 				_drawBoundsY += -(_drawBoundsY - _destBoundsY) * 0.3;
 				_drawBoundsW += -(_drawBoundsW - _destBoundsW) * 0.1;
 				_drawBoundsH += -(_drawBoundsH - _destBoundsH) * 0.1;
+			}
+			
+			if ( loading ) {
+				rotate += 5;
+				rotate = rotate % 360;
+			} else {
+				if (rotate > 0 && rotate < 360)
+					rotate += 5;
+				else
+					rotate = 0;
+				
+			}
+			
+			li -= 0.05;
+			if (li < 0){
+				li = 0;
 			}
 
 			if (name == null) {
@@ -415,8 +442,8 @@ public class videoCamera extends JPanel {
 		}
 
 		for (Face f : faces) {
-			g2.setColor(f.color);
-			g2.setStroke(new BasicStroke(4));
+			g2.setColor(blend(f.color,Color.WHITE,f.li));
+			g2.setStroke(new BasicStroke(4 + (int)(f.li*4)));
 
 			drawDiamond(
 					g2,
@@ -424,10 +451,6 @@ public class videoCamera extends JPanel {
 					(int) (f._drawBoundsY + f._drawBoundsH / 2 - f._drawBoundsH * 0.75),
 					(int) (f._drawBoundsX + f._drawBoundsW * 2),
 					(int) (f._drawBoundsY + f._drawBoundsH * 2 - f._drawBoundsH * 0.75));
-			/*
-			 * g2.drawRect((int) (f._drawBoundsX), (int) (f._drawBoundsY), (int)
-			 * (f._drawBoundsW), (int) (f._drawBoundsH));
-			 */
 
 			g2.setColor(Color.WHITE);
 
@@ -440,6 +463,7 @@ public class videoCamera extends JPanel {
 
 			if (f._duration > 40 && !f._sent) {
 				f._sent = true;
+				f.li = 1.0;
 				Rect r = f._bounds;
 				r.x -= r.width * 0.25;
 				r.y -= r.height * 0.25;
@@ -484,13 +508,13 @@ public class videoCamera extends JPanel {
 	public void saveImage(Mat subimg, Face f) {
 		idx++;
 
-		Imgcodecs.imwrite("filename" + idx + ".png", subimg);
+		Imgcodecs.imwrite("filename" + idx + ".jpg", subimg);
 
 		String key = "c2281afa671f40c1a58dd1a39aada04a";
 
 		try {
 			
-			final InputStream stream = new FileInputStream(new File("filename" + idx + ".png"));
+			final InputStream stream = new FileInputStream(new File("filename" + idx + ".jpg"));
 			final byte[] bytes = new byte[stream.available()];
 			stream.read(bytes);
 			stream.close();
@@ -504,7 +528,7 @@ public class videoCamera extends JPanel {
 
 					public void failed(UnirestException e) {
 						System.out.println("The request has failed");
-						f._duration = 0;
+						f._duration = 30;
 					}
 
 					public void completed(HttpResponse<JsonNode> response) {
@@ -521,7 +545,7 @@ public class videoCamera extends JPanel {
 						} catch (JSONException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
-							f._duration = 0;
+							f._duration = 30;
 						}
 						
 						Future<HttpResponse<JsonNode>> response2 = Unirest
@@ -533,7 +557,7 @@ public class videoCamera extends JPanel {
 
 									public void failed(UnirestException e) {
 										System.out.println("The request has failed");
-										f._duration = 0;
+										f._duration = 30;
 									}
 
 									public void completed(HttpResponse<JsonNode> response) {
@@ -556,7 +580,7 @@ public class videoCamera extends JPanel {
 
 														public void failed(UnirestException e) {
 															System.out.println("The request has failed");
-															f._duration = 0;
+															f._duration = 30;
 														}
 
 														public void completed(HttpResponse<JsonNode> response) {
@@ -568,33 +592,33 @@ public class videoCamera extends JPanel {
 															System.out.println(body.toString());
 															
 															try {
-																f.name = body.getObject().getString("name");
+																f.name = body.getObject().getString("name").toUpperCase();
 																f.occ = body.getObject().getString("userData"); 
 															} catch (JSONException e) {
 																// TODO Auto-generated catch block
 																e.printStackTrace();
-																f._duration = 0;
+																f._duration = 30;
 															}
 
 														}
 
 														public void cancelled() {
 															System.out.println("The request has been cancelled");
-															f._duration = 0;
+															f._duration = 30;
 														}
 													});
 											
 										} catch (JSONException e) {
 											// TODO Auto-generated catch block
 											e.printStackTrace();
-											f._duration = 0;
+											f._duration = 30;
 										}
 
 									}
 
 									public void cancelled() {
 										System.out.println("The request has been cancelled");
-										f._duration = 0;
+										f._duration = 30;
 									}
 								});
 						
@@ -602,13 +626,13 @@ public class videoCamera extends JPanel {
 
 					public void cancelled() {
 						System.out.println("The request has been cancelled");
-						f._duration = 0;
+						f._duration = 30;
 					}
 				});
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			f._duration = 0;
+			f._duration = 30;
 		}
 
 	}
