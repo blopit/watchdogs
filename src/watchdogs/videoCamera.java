@@ -49,9 +49,9 @@ public class videoCamera extends JPanel {
 	boolean debug = false;
 
 	CascadeClassifier faceCascade = new CascadeClassifier(
-			"res/haarcascades_cuda/haarcascade_frontalface_alt.xml");
+			"res/haarcascades/cars.xml");
 	CascadeClassifier faceCascadeProfile = new CascadeClassifier(
-			"res/haarcascades_cuda/haarcascade_profileface.xml");
+			"res/haarcascades/cars.xml");
 	ArrayList<Face> faces = new ArrayList<Face>();
 	char[] alphabet = "_ABCDEFGHIJKLMNOPQRSTUV1234567890".toCharArray();
 
@@ -367,9 +367,9 @@ public class videoCamera extends JPanel {
 				0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize,
 						absoluteFaceSize), new Size());
 
-		faceCascadeProfile.detectMultiScale(grayFrame, facsProf, 1.1, 2,
+		/*faceCascadeProfile.detectMultiScale(grayFrame, facsProf, 1.1, 2,
 				0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(absoluteFaceSize,
-						absoluteFaceSize), new Size());
+						absoluteFaceSize), new Size());*/
 
 		BufferedImage image = Mat2BufferedImage(mat);
 		g.drawImage(image, 10, 10, image.getWidth(), image.getHeight(), null);
